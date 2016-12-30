@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="http://gc.kis.scr.kaspersky-labs.com/BA7ADB79-F6F8-5640-8BEE-AA77CF350A8F/main.js" charset="UTF-8"></script>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+varying vec4 fPosition;
+
+void main(){
+    gl_Position = vPosition;
+    fPosition = vPosition;
+}
+
+</script>
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 fPosition;
+
+#define MAX_ITERATIONS 200
+uniform float factor;
+uniform float scale;
+uniform vec2 center;
+uniform bool Mandelbrot;
+uniform vec2 c;
+
+int fractal(vec2 z0, vec2 c, int maxiterations){
+    vec2 z = z0;
+    vec2 zAux = z0;
+	int iAux = 0;
+    
+	for(int i = 0; i < MAX_ITERATIONS; i++) {
+        z.x = z.x * z.x - z.y * z.y + c.x;
+        z.y = 2.0 * zAux.x * z.y + c.y;
+        zAux = z;
+            
+		if(z.x * z.x + z.y * z.y > 4.0){
+			break;
+         }
+		  iAux++;
+    }
+    
+    if(iAux == maxiterations + 1){
+        return 0;
+    }else{
+        return iAux;
+    }
+}
+
+vec3 paletize(float v, float factor) {
+    float vv = v*factor;
+    return vec3(sin(vv/3.0), cos(vv/6.0), cos(vv/(12.0+3.14/4.0)));
+}
+
+void main() {
+    float Fractal;
+    vec2 z0, cFinal;
+
+    if(Mandelbrot == true){ //z0=0+0i e c=p
+        //c comes with (0,0) in this case
+        z0 = c; 
+        cFinal = vec2(fPosition.x / scale + center.x, fPosition.y / scale + center.y);
+    }else{ //z0=p e c=cte 
+        z0 = vec2(fPosition.x / scale + center.x, fPosition.y / scale + center.y);
+        cFinal = c;
+    }   
+    Fractal = float(fractal(z0, cFinal, 200)); 
+    gl_FragColor = vec4(paletize(Fractal, factor), 1);
+}
+</script>
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="fractals.js"></script>
+</head>
+<body>
+    <title>Fractals</title>
+    
+    <p> Use 'Q' and 'A' keys dive/emerge. Use click/drag/release to move center point </p>
+    
+    <canvas id="gl-canvas" width="512" height="512">
+        Oops... your browser doesn't support the HTML5 canvas element"
+    </canvas>
+        
+    <div>
+        
+    factor: <input id="factorSlide" type="range" min="0.1" max="105" step="0.5" value ="24"/>
+        
+    <select id="fractalTypeMenu" size="1">
+        <option value="0">Mandelbrot</option>
+        <option value="1">Julia c=-0.4+0.6i</option>
+        <option value="2">Julia c=0.285+0i</option>
+        <option value="3">Julia c=0.285+0.01i</option>
+        <option value="4">Julia c=-0.8+0.156i</option>
+        <option value="5">Julia c=0.8+0i</option>  
+    </select>
+        
+    </div>
+</body>
+</html>

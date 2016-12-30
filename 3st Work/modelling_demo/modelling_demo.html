@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<head>
+<script id="vertex-shader-2" type="x-shader/x-vertex">
+const vec4 lightPosition = vec4(0.0, 0.0, 10.0, 1.0);    // in WC
+
+attribute vec4 vPosition;   // vertex position in modelling coordinates
+attribute vec4 vNormal;     // vertex normal in modelling coordinates
+
+uniform mat4 mView;         // view transformation matrix (for points)
+uniform mat4 mViewVectors;  // view transformation matrix (for vectors)
+uniform mat4 mModelView;    // model-view transformation (for points)
+uniform mat4 mNormals;      // model-view transformation (for vectors/normals)
+
+uniform mat4 mProjection;   // projection matrix
+
+varying vec3 fNormal;       // normal vector in camera space (to be interpolated)
+varying vec3 fLight;
+varying vec3 fViewer;
+
+void main(){
+    // compute position in camera frame
+    vec3 posC = (mModelView * vPosition).xyz;
+    
+    // compute normal in camera frame
+    fNormal = (mNormals * vNormal).xyz;
+
+    // compute light vector in camera frame
+    if(lightPosition.w == 0.0) 
+        fLight = normalize((mViewVectors * lightPosition).xyz);
+    else 
+        fLight = normalize((mView*lightPosition).xyz - posC);
+    
+    // Compute the view vector
+    // fViewer = -fPosition; // Perspective projection
+    fViewer = vec3(0,0,1); // Parallel projection only
+
+    // Compute vertex position in clip coordinates (as usual)
+    gl_Position = mProjection * mModelView * vPosition;
+
+    // make correction for left handed system of clip space
+    //gl_Position.z = -gl_Position.z;
+}
+</script>
+<script id="fragment-shader-2" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec3 fPosition;
+varying vec3 fNormal;
+
+uniform vec3 color;
+const float shininess = 60.0;
+
+const vec3 lightAmb = vec3(0.2, 0.2, 0.2);
+const vec3 lightDif = vec3(0.5, 0.5, 0.5);
+const vec3 lightSpe = vec3(1.0, 1.0, 1.0);
+
+vec3 ambientColor = lightAmb * color;
+vec3 diffuseColor = lightDif * color;
+vec3 specularColor = lightSpe * vec3(1.0, 1.0, 1.0);
+
+varying vec3 fLight;
+varying vec3 fViewer;
+
+void main() {
+
+    vec3 L = normalize(fLight);
+    vec3 V = normalize(fViewer);
+    vec3 N = normalize(fNormal);
+   
+    // Compute the halfway vector for Phong-Blinn model
+    vec3 H = normalize(L+V);
+
+    // compute diffuse reflection, don't let the vertex be illuminated from behind...
+    float diffuseFactor = max( dot(L,N), 0.0 );
+    vec3 diffuse = diffuseFactor * diffuseColor;
+
+    // compute specular reflection
+    float specularFactor = pow(max(dot(N,H), 0.0), shininess);
+    vec3 specular = specularFactor * specularColor;
+
+    // specular reflection should be 0 if normal is pointing away from light source
+    if( dot(L,N) < 0.0 ) {
+        specular = vec3(0.0, 0.0, 0.0);
+    }
+
+    // add all 3 components from the illumination model (ambient, diffuse and specular)
+    gl_FragColor = vec4(ambientColor + diffuse + specular, 1.0);
+}
+</script>
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="../Common/cube.js"></script>
+<script type="text/javascript" src="../Common/sphere.js"></script>
+<script type="text/javascript" src="../Common/cylinder.js"></script>
+<script type="text/javascript" src="modelling_demo.js"></script>
+
+</head>
+<body>
+  <title>40581-48398-tp3</title>
+  <div>
+		<p> Use Arrow Keys to move the car</p>
+		<p> Use 'Q' and 'W' to rotate the base</p>
+		<p> Use 'A' and 'S' to move lower arm </p>
+		<p> Use 'Z' and 'X' to move upper arm</p>
+		<p> Use 'O' and 'P' to move the claw</p>
+		<p> Use 'K' and 'L' to rotate the fist</p>
+	</div>
+	
+    <div id="container">
+            <canvas id="gl-canvas" width="512" height="512"> Oops... your browser doesn't support the HTML5 canvas element"
+            </canvas>
+    </div>
+    <select id="ProjectionMenu" size="1">
+                    <option value="0">Axonométrica</option>
+                    <option value="1">Perspetiva</option>
+    </select>
+    
+     <div id="axonometricDiv">
+        theta <input id="thetaSlider" type="range" min="-180.0" max="180.0" step="1.0" value ="-20.30"/>
+        gamma <input id="gammaSlider" type="range" min="-180.0" max="180.0" step="1.0" value ="19.4"/>
+    </div>
+</body>
+</html>

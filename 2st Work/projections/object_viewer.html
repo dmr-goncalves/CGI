@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="object_viewer.css">
+        <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec3 vNormal;
+        
+        uniform mat4 mProjection;
+        uniform mat4 mModelView;
+        uniform mat4 mNormals;
+        
+        uniform int color;
+        varying vec4 fColor;
+                
+        void main(){
+            gl_Position = mProjection * mModelView * vPosition;
+            
+            if(color == 1){
+                fColor = vPosition; //vPosition
+            }else if(color == 2){
+                fColor = vec4(vNormal, 1.0); //vNormal;
+            }else if(color == 3){
+                fColor = vec4(1.0, 1.0, 1.0, 1.0); //White
+            }
+            vNormal;
+        }
+        </script>
+        <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 fColor;
+        void main() {
+            gl_FragColor = fColor;
+        }
+        </script>  
+        <script id="vertex-shader-2" type="x-shader/x-vertex">
+        </script>
+        <script id="fragment-shader-2" type="x-shader/x-vertex">
+        </script>
+        <script type="text/javascript" src="../Common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../Common/initShaders.js"></script>
+        <script type="text/javascript" src="../Common/MV.js"></script>
+        <script type="text/javascript" src="../Common/sphere.js"></script>
+        <script type="text/javascript" src="../Common/cube.js"></script>
+        <script type="text/javascript" src="pyramid.js"></script>
+        <script type="text/javascript" src="torus.js"></script>
+        <script type="text/javascript" src="object_viewer.js"></script>        
+    </head>
+    <body>
+       <div id="singlepagecontainer">
+            <div id="interfacearea">           
+                <select id="ObjectMenu" size="1">
+                    <option value="0">Choose Object</option>
+                    <option value="1">Cube</option>
+                    <option value="2">Sphere</option>
+                    <option value="3">Square Pyramid</option>
+                    <option value="4">Torus</option>
+                </select>
+                
+                <select id="TypeMenu" size="1">
+                    <option value="0">Choose Drawing Mode</option>
+                    <option value="1">WireFrame</option>
+                    <option value="2">Filled</option>
+                </select>
+                <select id="ProjectionMenu" size="1">
+                    <option value="0">Choose Projection</option>
+                    <option value="1">Oblíqua</option>
+                    <option value="2">Axonométrica</option>
+                    <option value="3">Perspetiva</option>
+                </select>
+                <br><br>
+                <div id="perspectiveDiv">
+                    d <input id="dSlider" type="range" min="1.0" max="10.0" step="0.001" value ="1.0"/>
+                </div>
+                <div id="obliquousDiv">
+                    l <input id="lSlider" type="range" min="0.0" max="1.0" step="0.1" value ="1.0"/>
+                    alfa <input id="alfaSlider" type="range" min="0" max="90.0" step="1" value ="45.0"/>                    
+                </div>
+                <div id="axonometricDiv">
+                    theta <input id="thetaSlider" type="range" min="-180.0" max="180.0" step="1.0" value ="-20.30"/>
+                    gamma <input id="gammaSlider" type="range" min="-180.0" max="180.0" step="1.0" value ="19.4"/>
+                </div>
+                <div>VTX : <input type="file" id="vertex"></div>
+                <div>FRG : <input type="file" id="fragment"></div>
+                <br>
+                <div><button id="resetShaders">Reset Shaders</div>
+                <br>
+                <select id="ColorMenu" size="1">
+                    <option value="0">Choose Color</option>
+                    <option value="1">vPosition</option>
+                    <option value="2">vNormal</option>
+                    <option value="3">White</option>
+                </select>                
+            </div>
+	        <div id="viewarea">
+                <canvas id="gl-canvas">
+                    Oops... your browser doesn't support the HTML5 canvas element"
+                </canvas>      
+            </div>
+        </div>
+    </body>
+</html>
+
